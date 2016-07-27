@@ -1,0 +1,194 @@
+#!/bin/bash
+
+############################################################################
+#title           : alerta_hw
+#description     : script que comprueba el HW del equipo
+#author          : Óscar Borrás
+#email           : oscarborras@iesjulioverne.es
+#date            : 2015-06-12
+#version         : 0.1
+#license         : GNU GPLv3 
+############################################################################
+
+
+
+############################################################################
+#  INSTRUCCIONES
+############################################################################
+# Programar en cron la ejecución de este script cada 15 min
+# La BBDD que almancena el hardware es local con sqlite sincronizada con
+# una de fuente ya que de esta forma el script puede funcionar incluso
+# si el equipo no tiene conexión con la red local.
+# El fichero de la BBDD se sincronizará periodicamente para que sea fiel 
+# al fuente.
+
+
+############################################################################
+#  FALLOS POR CORREGIR
+############################################################################
+#
+# 
+
+############################################################################
+#  FUNCIONES PENDIENTES DE IMPLEMENTAR
+############################################################################
+#
+# - Envio del email que avisa a los profesores (hecho instalando servidor email)
+# - registrar log en el servidor BBDD Mysql???
+# - Generación de logs para cada proceso realizado
+# - Fijar una ruta mas segura para los ficheros de config .cfg
+# - Actualizar BBDD sqlite sincronizando con el original o fuente mediante git
+
+
+############################################################################
+# LISTA DE ESTADOS DE EXIT:
+############################################################################
+# 0   - Ok
+# 1   - No es ejecutado como root
+
+############################################################################
+# Inicialización de variables configurables
+############################################################################
+
+VERSION="0.2"
+LOG="/var/log/hw.log"	#Fichero log del programa
+FECHA_LOG=`date +"%Y-%m-%d_%H:%M:%S"`;
+
+EMAILS_ALERTA=("oscarborras@iesjulioverne.es" \
+				"mantenimiento@iesjulioverne.es" \
+				"oscarb74@gmail.com" \
+) 
+
+EMAILS_ALERTA="oscarborras@iesjulioverne.es,mantenimiento@iesjulioverne.es,oscarb74@gmail.com" 
+
+PC_ACTUAL=`hostname`
+
+#Servidor con la BBDD fuente a sincronizar
+SRV_BBDD=""  ##### configurar
+source ./ahw.cfg  #fijar otra ruta para este fichero de configuracion#############33
+BBDD=$(dirname $0)/hw.db
+
+
+
+############################################################################
+# BLOQUE FUNCIONES
+############################################################################
+
+# Función que envia email de aviso
+# Uso: enviar_email <mensaje a enviar>
+# return=1 --> no se ha realizado ningun backup o no existe el fichero con la fecha del ultimo backup
+# return=X --> donde X es el numero de dias desde el ultimo backup
+function enviar_email() {
+	#PS=$(eval echo ${EP} | base64 -d)
+	echo -e $* | mail -s "Alerta cambio Hardware: $PC_ACTUAL"  -r "$HOSTNAME@iesjulioverne.local" $EMAILS_ALERTA
+}
+
+# Función que obtiene de la BBDD la memoria del equipo actual 
+# Uso: obtener_memoria_BBDD <nombre del PC actual>
+# return=<memoria|disco>
+function obtener_hw_BBDD() {
+	local sql="select memoria,disco from hw where pc='$1'"
+	local row=`sqlite3 $BBDD "${sql}"`
+	echo $row	
+}
+
+
+# función de ayuda
+function ayuda() {
+cat << DESCRIPCION_AYUDA
+SYNOPSIS
+    $0 [-h -v]
+DESCRIPCION
+    Monitorizar el hardware del equipo
+CODIGOS DE RETORNO
+    0 Si no hay ningún error
+DESCRIPCION_AYUDA
+}
+
+function version() {
+	echo "$0 versión $VERSION" 
+	echo
+}
+
+
+function main() {
+	aviso=false
+    #registro_inicio_log
+
+	#comprobacion de RAM
+    #memoria_actual=`cat /proc/meminfo  | grep -i memtotal | awk {'print $2 " " $3'}`
+    #memoria_actual=`free -h  | grep -i Mem | awk {'print $2'} | cut -d "," -f1`  #obtengo la unidad en giga sin decimales por lo que hay que sumarle 1
+    #memoria_actual=$((memoria_actual+1))
+   
+    memoria_actual=`free -h  | grep -i Mem | awk {'print $2'}`
+    echo "Memoria instalada: $memoria_actual" #codigo depuracion
+        
+    #comprobacion de disco duro
+    disco_actual=`lsblk -fm /dev/sda | grep -w sda | awk {'print $3'}`
+	echo "Disco instalado: $disco_actual" #codigo depuracion
+
+	datos=$(obtener_hw_BBDD $HOSTNAME)
+	memoria_BBDD=`echo $datos | awk -F'|' '{print $1}'`
+	disco_BBDD=`echo $datos | awk -F'|' '{print $2}'`
+
+		
+		#tener instalado slqlite en el cliente y sincronizarlo con git con un servidor donde estarán los datos actualizados.
+		#Comprobar si hay actualizaciones de la bbdd.
+		
+
+	#Si hay modificaciones en el hardware avisar por email. Si falla el email avisar a un equipo de profesor con netcat o similar y registrarlo en el equipo.
+	msg="AVISO DE CAMBIO DE HARDWARE"
+	msg="$msg\n---------------------------------------------------------------"
+	msg="$msg\nPC: $PC_ACTUAL"
+	msg="$msg\n---------------------------------------------------------------"
+	if [[ $memoria_actual != $memoria_BBDD ]]; then
+		msg="$msg\nMemoria actual: $memoria_actual\nMemoria BBDD: $memoria_BBDD"
+		#enviar_email $msg
+		#echo -e $msg
+		aviso=true
+	fi
+	
+	if [[ $disco_actual != $disco_BBDD ]]; then
+		msg="$msg\nDisco actual: $disco_actual\nDisco BBDD: $disco_BBDD"
+		#enviar_email $msg
+		#echo -e $msg
+		aviso=true
+	fi
+	
+	if [[ $aviso == "true" ]]; then
+		enviar_email $msg
+		echo "enviado correo."  #codigo depuracion
+	fi
+		
+	#registro_fin_log
+}
+
+############################################################################
+# FIN BLOQUE FUNCIONES
+############################################################################
+
+
+if [[ $EUID -ne 0 ]]; then
+	echo "Este script debe ser ejecutado por el usuario root" > $TTY_SALIDA
+	logger -p user.err -t alerta_hw "Script NO ejecutado como root"
+	exit 1
+fi
+
+if [ $# -gt 0 ]; then
+	case $1 in
+		"-h"|"--help")
+			ayuda
+			exit 0 ;;
+		"-v"|"--version")
+			version
+			exit 0 ;;
+		*)
+			echo "Parámetro '$1' incorrecto."
+			ayuda
+			exit 0 ;;
+	esac
+fi
+
+
+#Llamada a la función Main que inicia el script
+main
