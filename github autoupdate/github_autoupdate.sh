@@ -6,7 +6,7 @@
 #author          : Óscar Borrás
 #email           : oscarborras@iesjulioverne.es
 #date            : 27-07-2016
-#version         : 1.0
+#version         : 0.1
 #license         : GNU GPLv3 
 ############################################################################
 
