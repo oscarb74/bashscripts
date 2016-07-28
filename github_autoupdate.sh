@@ -6,7 +6,7 @@
 #author          : Óscar Borrás
 #email           : oscarborras@iesjulioverne.es
 #date            : 28-07-2016
-#version         : 0.7
+#version         : 0.8
 #license         : GNU GPLv3 
 ############################################################################
 
@@ -56,7 +56,9 @@ TTY_SALIDA="/dev/pts/4" #guake. Poner /dev/null si no desea salida en una termin
 # Uso: actualizar_repo
 # return=1 --> no se ha realizado la clonación satisfactoriamente
 function actualizar_repo(){
-	git pull
+	echo "[ `date +"%Y-%m-%d_%H:%M:%S"` :Info] Haciendo pull:" | tee "$TTY_SALIDA" >> $LOG
+	git pull | tee "$TTY_SALIDA" >> $LOG
+	
 	#git fetch origin
 	#git reset --hard origin/master
 
