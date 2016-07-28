@@ -6,7 +6,7 @@
 #author          : Óscar Borrás
 #email           : oscarborras@iesjulioverne.es
 #date            : 28-07-2016
-#version         : 0.3
+#version         : 0.5
 #license         : GNU GPLv3 
 ############################################################################
 
@@ -44,7 +44,6 @@ SCRIPT_NAME="github_autoupdate.sh"
 DIR_INSTALL="/root/.scripts"
 REPO_NAME="bashscripts" #nombre repo en github
 FILE_LASTUPDATE="./github_autoupdate.date"
-#CLONAR=0  #variable para saber si debemos clonar o no el repo. Por defecto 'no'.
 DATE_LOG=`date +"%Y-%m-%d_%H:%M:%S"`;
 LOG="./github_autoupdate.log"	#Fichero log del programa
 TTY_SALIDA="/dev/pts/4" #guake. Poner /dev/null si no desea salida en una terminal. La terminal debe existir
@@ -104,6 +103,8 @@ then
 	if [ $fecha_lastbackup != $fecha_actual ]
 	then
 		actualizar_repo
+	else
+		echo "[ `date +"%Y-%m-%d_%H:%M:%S"` :Info] Ya se ha comprobado hoy las actualizaciones." | tee "$TTY_SALIDA" >> $LOG
 	fi
 else
 	actualizar_repo
