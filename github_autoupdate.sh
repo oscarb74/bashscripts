@@ -6,7 +6,7 @@
 #author          : Óscar Borrás
 #email           : oscarborras@iesjulioverne.es
 #date            : 28-07-2016
-#version         : 0.9
+#version         : 1.0
 #license         : GNU GPLv3 
 ############################################################################
 
@@ -114,5 +114,5 @@ else
 	actualizar_repo
 fi
 echo "[ `date +"%Y-%m-%d_%H:%M:%S"` :Info] Finalizado autoupdate." | tee "$TTY_SALIDA" >> $LOG
-echo
+echo | tee "$TTY_SALIDA" >> $LOG
 
