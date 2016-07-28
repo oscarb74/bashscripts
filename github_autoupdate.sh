@@ -114,5 +114,5 @@ else
 	actualizar_repo
 fi
 echo "[ `date +"%Y-%m-%d_%H:%M:%S"` :Info] Finalizado autoupdate." | tee "$TTY_SALIDA" >> $LOG
-echo | tee "$TTY_SALIDA" >> $LOG
+echo " " | tee "$TTY_SALIDA" >> $LOG
 
