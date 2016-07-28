@@ -40,6 +40,7 @@
 ############################################################################
 # Inicialización de variables configurables
 ############################################################################
+DIR_INSTALL="/root/.scripts"
 FILE_LASTUPDATE="./github_autoupdate.date"
 #CLONAR=0  #variable para saber si debemos clonar o no el repo. Por defecto 'no'.
 DATE_LOG=`date +"%Y-%m-%d_%H:%M:%S"`;
@@ -83,6 +84,14 @@ function clonar(){
 # Main
 ############################################################################
 
+#comprobamos si debemos instalar el programa (hacer clonacion)
+if [ -d .git ]  
+then
+	echo hola
+	exit
+fi
+echo 1
+exit
 #comprobamos fecha ultima ejecucion
 #si es distinta de hoy clonamos sino no. Para ello usar un fichero log o temporal
 echo "------------------------------------------------------------------------" | tee "$TTY_SALIDA" >> $LOG
