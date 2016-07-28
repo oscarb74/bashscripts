@@ -40,7 +40,9 @@
 ############################################################################
 # Inicialización de variables configurables
 ############################################################################
+SCRIPT_NAME="github_autoupdate.sh"
 DIR_INSTALL="/root/.scripts"
+REPO_NAME="bashscripts" #nombre repo en github
 FILE_LASTUPDATE="./github_autoupdate.date"
 #CLONAR=0  #variable para saber si debemos clonar o no el repo. Por defecto 'no'.
 DATE_LOG=`date +"%Y-%m-%d_%H:%M:%S"`;
@@ -65,16 +67,16 @@ function actualizar_repo(){
 
 # Función que clona el repositorio en local. Se debe realizar solo la primera vez
 function clonar(){
-	git clone  https://github.com/oscarb74/bashscripts.git
+	git clone  https://github.com/oscarb74/"$REPO_NAME".git
 	
 	#para ejecutar el script sincronizado con github
-	cd bashscripts
+	
 	
 	#si se clona actualizar fichero con fecha de hoy
-	date +%Y%m%d > $FILE_LASTUPDATE 
+	date +%Y%m%d > "$REPO_NAME"/$FILE_LASTUPDATE 
 	
-	#eliminamos el script incial
-	rm ../github_autoupdate.sh
+	#eliminamos el script inicial usado para la instalación o clonación inicial
+	rm github_autoupdate.sh
 
 #	echo "0" #return de la función
 }
@@ -85,13 +87,12 @@ function clonar(){
 ############################################################################
 
 #comprobamos si debemos instalar el programa (hacer clonacion)
-if [ -d .git ]  
+if [ ! -d .git ]  
 then
-	echo hola
+	clonar
 	exit
 fi
-echo 1
-exit
+
 #comprobamos fecha ultima ejecucion
 #si es distinta de hoy clonamos sino no. Para ello usar un fichero log o temporal
 echo "------------------------------------------------------------------------" | tee "$TTY_SALIDA" >> $LOG
@@ -105,7 +106,7 @@ then
 		actualizar_repo
 	fi
 else
-	clonar
+	actualizar_repo
 fi
 	
 
