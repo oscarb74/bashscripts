@@ -69,7 +69,7 @@ function actualizar_repo(){
 }
 
 # Función que clona el repositorio en local. Se debe realizar solo la primera vez
-function clonar(){
+function instalar(){
 	git clone  https://github.com/oscarb74/"$REPO_NAME".git
 	
 	#para ejecutar el script sincronizado con github
@@ -92,12 +92,11 @@ function clonar(){
 #comprobamos si debemos instalar el programa (hacer clonacion)
 if [ ! -d .git ]  
 then
-	clonar
+	instalar
 	exit
 fi
 
-#comprobamos fecha ultima ejecucion
-#si es distinta de hoy clonamos sino no. Para ello usar un fichero log o temporal
+
 echo "------------------------------------------------------------------------" | tee "$TTY_SALIDA" >> $LOG
 echo "[ `date +"%Y-%m-%d_%H:%M:%S"` :Info] Iniciando autoupdate ..." | tee "$TTY_SALIDA" >> $LOG
 if [ -f $FILE_LASTUPDATE ]  
